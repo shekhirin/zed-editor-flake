@@ -120,6 +120,116 @@ You can manually trigger the update workflow through the GitHub Actions interfac
     *   Check **Force check for updates** to run the update process even if the latest fetched version matches the current version in the flake (useful for re-calculating hashes if a release asset was changed upstream).
 5.  Click "Run workflow".
 
+## Overriding Version
+
+You can override the version of any package using the `lib.overrideVersion` function. This is useful if you want to pin to a specific version or test a newer release before it's officially added to the flake.
+
+### For Source-Built Packages (zed-editor, zed-editor-preview)
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    zed-editor-flake.url = "github:shekhirin/zed-editor-flake";
+  };
+
+  outputs = { self, nixpkgs, zed-editor-flake, ... }:
+  let
+    system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+    
+    # Override to a specific version
+    zed-custom = zed-editor-flake.lib.overrideVersion {
+      inherit pkgs;
+      package = "zed-editor";
+      version = "0.200.0";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      cargoHash = "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=";
+    };
+  in
+  {
+    nixosConfigurations.yourHostname = nixpkgs.lib.nixosSystem {
+      inherit system;
+      modules = [
+        ({ config, pkgs, ... }: {
+          environment.systemPackages = [ zed-custom ];
+        })
+      ];
+    };
+  };
+}
+```
+
+### For Binary Packages (zed-editor-bin, zed-editor-preview-bin)
+
+For binary packages, you only need to specify assets for the platforms you want to support. The build will only fail if you try to build on a platform that doesn't have assets defined.
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    zed-editor-flake.url = "github:shekhirin/zed-editor-flake";
+  };
+
+  outputs = { self, nixpkgs, zed-editor-flake, ... }:
+  let
+    system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+    
+    # Override to a specific version
+    # You can specify only the platforms you need
+    zed-custom = zed-editor-flake.lib.overrideVersion {
+      inherit pkgs;
+      package = "zed-editor-bin";
+      version = "0.200.0";
+      hash = null; # Not used for binary packages
+      assets = {
+        # Only defining Linux platforms in this example
+        "x86_64-linux" = {
+          url = "https://github.com/zed-industries/zed/releases/download/v0.200.0/zed-linux-x86_64.tar.gz";
+          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+          type = "tar.gz";
+        };
+        "aarch64-linux" = {
+          url = "https://github.com/zed-industries/zed/releases/download/v0.200.0/zed-linux-aarch64.tar.gz";
+          sha256 = "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=";
+          type = "tar.gz";
+        };
+        # Optionally add Darwin platforms if needed
+        # "x86_64-darwin" = { ... };
+        # "aarch64-darwin" = { ... };
+      };
+    };
+  in
+  {
+    nixosConfigurations.yourHostname = nixpkgs.lib.nixosSystem {
+      inherit system;
+      modules = [
+        ({ config, pkgs, ... }: {
+          environment.systemPackages = [ zed-custom ];
+        })
+      ];
+    };
+  };
+}
+```
+
+### Getting Hashes
+
+To get the correct hashes for a specific version:
+
+```sh
+# For source builds (get the source hash)
+nix-prefetch-url --unpack https://github.com/zed-industries/zed/archive/refs/tags/v0.200.0.tar.gz
+
+# For binary builds (get each platform's hash)
+nix-prefetch-url https://github.com/zed-industries/zed/releases/download/v0.200.0/zed-linux-x86_64.tar.gz
+nix-prefetch-url https://github.com/zed-industries/zed/releases/download/v0.200.0/Zed-aarch64.dmg
+
+# For cargoHash, you'll need to try building first with a fake hash,
+# then Nix will tell you the correct hash in the error message
+```
+
 ## Contributing
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request. Please feel free to submit a pull request.
