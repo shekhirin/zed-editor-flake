@@ -3,6 +3,7 @@
   fetchurl,
   patchelf,
   makeWrapper,
+  undmg,
   libbsd,
   libX11,
   libXau,
@@ -123,9 +124,9 @@ in
     pname = "zed-editor-bin";
     inherit version;
 
-    # only on Linux do we need patchelf & makeWrapper
     nativeBuildInputs =
-      lib.optionals stdenv.hostPlatform.isLinux [patchelf makeWrapper];
+      lib.optionals stdenv.hostPlatform.isLinux [patchelf makeWrapper]
+      ++ lib.optionals stdenv.hostPlatform.isDarwin [undmg];
 
     # on Linux pull in the real libraries
     buildInputs = nixDeps;
@@ -135,19 +136,16 @@ in
       sha256 = info.sha256;
     };
 
+    sourceRoot = lib.optionalString (info.type == "dmg") ".";
+
     phases = ["unpackPhase" "installPhase"];
 
-    unpackPhase = ''
-      if [ "${info.type}" = "tar.gz" ]; then
+    unpackPhase =
+      if info.type == "tar.gz"
+      then ''
         tar xzf "$src"
-      else
-        mount=./mnt
-        mkdir -p "$mount"
-        /usr/bin/hdiutil attach "$src" -nobrowse -mountpoint "$mount"
-        cp -R "$mount"/*.app .
-        /usr/bin/hdiutil detach "$mount"
-      fi
-    '';
+      ''
+      else null;
 
     installPhase = ''
       appdir="$(find . -maxdepth 1 -type d -name '*.app' -print -quit)"
