@@ -143,9 +143,9 @@ in
       else
         mount=./mnt
         mkdir -p "$mount"
-        hdiutil attach "$src" -nobrowse -mountpoint "$mount"
+        /usr/bin/hdiutil attach "$src" -nobrowse -mountpoint "$mount"
         cp -R "$mount"/*.app .
-        hdiutil detach "$mount"
+        /usr/bin/hdiutil detach "$mount"
       fi
     '';
 
