@@ -186,7 +186,7 @@ in
       	# macOS: ship the .app
       	mkdir -p $out/Applications $out/bin
       	mv "$appdir" $out/Applications/
-      	ln -s $out/Applications/$(basename "$appdir")/Contents/MacOS/Zed \
+      	ln -s "$out/Applications/$(basename "$appdir")/Contents/MacOS/Zed" \
       	$out/bin/zeditor
       fi
     '';
