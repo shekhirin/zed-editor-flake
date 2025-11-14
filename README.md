@@ -23,19 +23,19 @@ You can run the editor directly without installing it:
 
 ```sh
 # Latest stable release (built from source)
-nix run github:HPsaucii/zed-editor-flake
+nix run github:shekhirin/zed-editor-flake
 
 # Latest stable release (pre-built binary)
-nix run github:HPsaucii/zed-editor-flake#zed-editor-bin
+nix run github:shekhirin/zed-editor-flake#zed-editor-bin
 
 # Latest stable release in an FHS environment
-nix run github:HPsaucii/zed-editor-flake#zed-editor-fhs
+nix run github:shekhirin/zed-editor-flake#zed-editor-fhs
 
 # Latest preview release (built from source)
-nix run github:HPsaucii/zed-editor-flake#zed-editor-preview
+nix run github:shekhirin/zed-editor-flake#zed-editor-preview
 
 # Latest preview release (pre-built binary)
-nix run github:HPsaucii/zed-editor-flake#zed-editor-preview-bin
+nix run github:shekhirin/zed-editor-flake#zed-editor-preview-bin
 ```
 
 ### Adding to Your Configuration
@@ -46,7 +46,7 @@ In your `flake.nix`:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    zed-editor-flake.url = "github:HPsaucii/zed-editor-flake";
+    zed-editor-flake.url = "github:shekhirin/zed-editor-flake";
   };
 
   outputs = { self, nixpkgs, zed-editor-flake, ... }:
