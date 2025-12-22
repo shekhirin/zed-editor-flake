@@ -98,7 +98,7 @@ assert withGLES -> stdenv.hostPlatform.isLinux; let
 in
   rustPlatform.buildRustPackage (finalAttrs: {
     pname = "zed-editor";
-    version = "0.217.0-pre";
+    version = "0.218.3-pre";
 
     outputs =
       ["out"]
@@ -110,7 +110,7 @@ in
       owner = "zed-industries";
       repo = "zed";
       tag = "v${finalAttrs.version}";
-      hash = "sha256-yUPqJ3Q2ZUL4FgU42mO/DzN0Bv2X1Uz8ecBOn5cHWsc=";
+      hash = "sha256-woG78i+5x/dFVaEvyhIshkUAjjvVg3MxggUDNFuscAw=";
     };
 
     patches = [
@@ -129,7 +129,7 @@ in
       '';
 
     useFetchCargoVendor = true;
-    cargoHash = "sha256-BogwBPzUH5q6NdxFiDuS+I5KIyg9ICth8kLrv7s8xog=";
+    cargoHash = "sha256-iCWgzpesckt350K6xDhFsFtTF0VSsVuDzEMD/BpdNJs=";
 
     nativeBuildInputs =
       [
