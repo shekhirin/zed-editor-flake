@@ -23,11 +23,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Install Nix
         uses: cachix/install-nix-action@v25
@@ -297,62 +298,16 @@ jobs:
         run: |
           nix flake update
 
-      - name: Build Pull Request Body
+      - name: Commit and push changes to main
         if: steps.check-zed-version.outputs.update_needed == 'true'
-        id: pr-body
         run: |
-          PR_BODY="This PR updates Zed Editor packages.\n\n"
-
-          if [ -n "${{ steps.check-zed-version.outputs.new_stable_version }}" ]; then
-            PR_BODY+="**Stable Channel:**\n"
-            PR_BODY+="Updated from \`${{ steps.check-zed-version.outputs.current_stable_version }}\` to \`${{ steps.check-zed-version.outputs.new_stable_version }}\`.\n\n"
-            PR_BODY+="Changes:\n"
-            PR_BODY+="- Updated package versions in both \`zed-editor\` and \`zed-editor-bin\`\n"
-            PR_BODY+="- Updated source hash in \`zed-editor\`\n"
-            PR_BODY+="- Updated cargo hash in \`zed-editor\`\n"
-            PR_BODY+="- Updated binary hashes in \`zed-editor-bin\`\n\n"
-            PR_BODY+="Automatic Hash Updates (Stable):\n"
-            PR_BODY+="Source hash for zed-editor: \`${{ steps.source-hash-stable.outputs.source_hash_stable }}\`\n"
-            PR_BODY+="Cargo hash for zed-editor: \`${{ steps.cargo-hash-stable.outputs.cargo_hash_stable }}\`\n"
-            PR_BODY+="Binary hashes for zed-editor-bin:\n"
-            PR_BODY+="- x86_64-linux: \`${{ steps.binary-hashes-stable.outputs.x86_64_linux_hash_stable }}\`\n"
-            PR_BODY+="- aarch64-linux: \`${{ steps.binary-hashes-stable.outputs.aarch64_linux_hash_stable }}\`\n"
-            PR_BODY+="- x86_64-darwin: \`${{ steps.binary-hashes-stable.outputs.x86_64_darwin_hash_stable }}\`\n"
-            PR_BODY+="- aarch64-darwin: \`${{ steps.binary-hashes-stable.outputs.aarch64_darwin_hash_stable }}\`\n\n"
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
           fi
 
-          if [ -n "${{ steps.check-zed-version.outputs.new_preview_version }}" ]; then
-            PR_BODY+="**Preview Channel:**\n"
-            PR_BODY+="Updated from \`${{ steps.check-zed-version.outputs.current_preview_version }}\` to \`${{ steps.check-zed-version.outputs.new_preview_version }}\`.\n\n"
-            PR_BODY+="Changes:\n"
-            PR_BODY+="- Updated package versions in both \`zed-editor-preview\` and \`zed-editor-preview-bin\`\n"
-            PR_BODY+="- Updated source hash in \`zed-editor-preview\`\n"
-            PR_BODY+="- Updated cargo hash in \`zed-editor-preview\`\n"
-            PR_BODY+="- Updated binary hashes in \`zed-editor-preview-bin\`\n\n"
-            PR_BODY+="Automatic Hash Updates (Preview):\n"
-            PR_BODY+="Source hash for zed-editor-preview: \`${{ steps.source-hash-preview.outputs.source_hash_preview }}\`\n"
-            PR_BODY+="Cargo hash for zed-editor-preview: \`${{ steps.cargo-hash-preview.outputs.cargo_hash_preview }}\`\n"
-            PR_BODY+="Binary hashes for zed-editor-preview-bin:\n"
-            PR_BODY+="- x86_64-linux: \`${{ steps.binary-hashes-preview.outputs.x86_64_linux_hash_preview }}\`\n"
-            PR_BODY+="- aarch64-linux: \`${{ steps.binary-hashes-preview.outputs.aarch64_linux_hash_preview }}\`\n"
-            PR_BODY+="- x86_64-darwin: \`${{ steps.binary-hashes-preview.outputs.x86_64_darwin_hash_preview }}\`\n"
-            PR_BODY+="- aarch64-darwin: \`${{ steps.binary-hashes-preview.outputs.aarch64_darwin_hash_preview }}\`\n\n"
-          fi
-
-          PR_BODY+="**Flake:**\n"
-          PR_BODY+="- Updated \`flake.lock\`\n\n"
-          PR_BODY+="This update was created automatically by GitHub Actions."
-
-          echo "pr_body<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$PR_BODY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create Pull Request
-        if: steps.check-zed-version.outputs.update_needed == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          commit-message: "chore: update Zed Editor packages"
-          branch: update-zed-editor-packages
-          delete-branch: true
-          title: "Update Zed Editor packages"
-          body: ${{ steps.pr-body.outputs.pr_body }} # Use the generated body
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages flake.lock
+          git commit -m "chore: update Zed Editor packages"
+          git push origin HEAD:main
