@@ -105,7 +105,7 @@ The automated update workflow performs the following steps:
     *   `zed-editor` (for stable releases)
     *   `zed-editor-preview` (for preview releases)
 6.  **Updates flake lock file:** `nix flake update` is run to refresh the `flake.lock` file.
-7.  **Creates a pull request:** A pull request is automatically created with all the changes, detailing the versions updated and the new hashes.
+7.  **Commits changes:** The workflow commits the updated package files and `flake.lock` directly to `main`.
 
 ### Manual Trigger
 
